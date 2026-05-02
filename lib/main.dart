@@ -5,20 +5,27 @@ import 'models/main_view_model.dart';
 import 'pages/home_page.dart';
 import 'pages/settings_page.dart';
 
-void main() {
+import 'package:shared_preferences/shared_preferences.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final prefs = await SharedPreferences.getInstance();
+  final goldUrl = prefs.getString('GoldUrl') ?? '';
+  final initialIndex = goldUrl.isEmpty ? 1 : 0;
+
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => MainViewModel()),
       ],
-      child: const GoldRateApp(),
+      child: GoldRateApp(initialIndex: initialIndex),
     ),
   );
 }
 
 class GoldRateApp extends StatelessWidget {
-  const GoldRateApp({super.key});
+  final int initialIndex;
+  const GoldRateApp({super.key, required this.initialIndex});
 
   @override
   Widget build(BuildContext context) {
@@ -30,21 +37,28 @@ class GoldRateApp extends StatelessWidget {
           systemOverlayStyle: SystemUiOverlayStyle.light,
         ),
       ),
-      home: const MainScreen(),
+      home: MainScreen(initialIndex: initialIndex),
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int initialIndex;
+  const MainScreen({super.key, this.initialIndex = 0});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
+  
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
+  }
   
   final List<Widget> _pages = [
     const HomePage(),
