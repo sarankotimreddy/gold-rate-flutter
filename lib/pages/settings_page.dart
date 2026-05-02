@@ -1,0 +1,167 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../models/main_view_model.dart';
+
+class SettingsPage extends StatefulWidget {
+  const SettingsPage({super.key});
+
+  @override
+  State<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends State<SettingsPage> {
+  final _urlController = TextEditingController();
+  final _goldElementController = TextEditingController();
+  final _silverElementController = TextEditingController();
+  final _companyNameController = TextEditingController();
+  final _fontSizeController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  void _loadSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _urlController.text = prefs.getString('GoldUrl') ?? '';
+      _goldElementController.text = prefs.getString('GoldElement') ?? '';
+      _silverElementController.text = prefs.getString('SilverElement') ?? '';
+      _companyNameController.text = prefs.getString('Company') ?? 'VERSAY JEWELLERY';
+      _fontSizeController.text = prefs.getString('FontSize') ?? '20';
+    });
+  }
+
+  void _saveSettings() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('GoldUrl', _urlController.text);
+    await prefs.setString('GoldElement', _goldElementController.text);
+    await prefs.setString('SilverElement', _silverElementController.text);
+    await prefs.setString('Company', _companyNameController.text);
+    await prefs.setString('FontSize', _fontSizeController.text);
+    
+    if (mounted) {
+      context.read<MainViewModel>().loadSettings();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Settings saved successfully!'),
+          backgroundColor: Color(0xFF1E3C72),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: AppBar(
+        title: const Text('Settings', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+        centerTitle: true,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Color(0xFF1E3C72), Color(0xFF2A5298)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        elevation: 0,
+      ),
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 30.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildSettingCard(
+              title: "General Configuration",
+              icon: Icons.storefront_rounded,
+              children: [
+                _buildTextField("Company Name", _companyNameController, Icons.business),
+                const SizedBox(height: 16),
+                _buildTextField("Font Size", _fontSizeController, Icons.format_size, isNumber: true),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildSettingCard(
+              title: "Data Sources",
+              icon: Icons.data_object_rounded,
+              children: [
+                _buildTextField("Target URL", _urlController, Icons.link, isUrl: true),
+                const SizedBox(height: 16),
+                _buildTextField("Gold JS Element", _goldElementController, Icons.javascript_rounded),
+                const SizedBox(height: 16),
+                _buildTextField("Silver JS Element", _silverElementController, Icons.javascript_rounded),
+              ],
+            ),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                backgroundColor: const Color(0xFFD4AF37),
+                foregroundColor: Colors.white,
+                elevation: 4,
+                shadowColor: const Color(0xFFD4AF37).withOpacity(0.5),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: _saveSettings,
+              child: const Text('SAVE SETTINGS', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingCard({required String title, required IconData icon, required List<Widget> children}) {
+    return Card(
+      elevation: 4,
+      shadowColor: Colors.black.withOpacity(0.05),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: const Color(0xFF1E3C72), size: 24),
+                const SizedBox(width: 12),
+                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1E3C72))),
+              ],
+            ),
+            const SizedBox(height: 24),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller, IconData icon, {bool isNumber = false, bool isUrl = false}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: isNumber ? TextInputType.number : (isUrl ? TextInputType.url : TextInputType.text),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: Colors.grey.shade600),
+        filled: true,
+        fillColor: Colors.grey.shade50,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Color(0xFF1E3C72), width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+    );
+  }
+}
