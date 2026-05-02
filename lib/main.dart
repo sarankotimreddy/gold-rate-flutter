@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 import 'models/main_view_model.dart';
 import 'pages/home_page.dart';
 import 'pages/settings_page.dart';
@@ -25,6 +26,9 @@ class GoldRateApp extends StatelessWidget {
       title: 'Gold Rate App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        appBarTheme: const AppBarTheme(
+          systemOverlayStyle: SystemUiOverlayStyle.light,
+        ),
       ),
       home: const MainScreen(),
       debugShowCheckedModeBanner: false,
