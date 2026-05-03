@@ -17,20 +17,52 @@ class _SettingsPageState extends State<SettingsPage> {
   final _companyNameController = TextEditingController();
   final _fontSizeController = TextEditingController();
 
+  final Map<String, TextEditingController> _mcControllers = {};
+  final List<String> _mcKeys = [
+    'McH', 'McF', 'McOz', 'McTw', 'McTe',
+    'McFi', 'McTf', 'McO', 'McMa', 'McMu',
+    'McNm', 'McG', 'McL', 'McHl', 'McRl', 'McBl'
+  ];
+
   @override
   void initState() {
     super.initState();
+    for (var key in _mcKeys) {
+      _mcControllers[key] = TextEditingController();
+    }
     _loadSettings();
+  }
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    _goldElementController.dispose();
+    _silverElementController.dispose();
+    _companyNameController.dispose();
+    _fontSizeController.dispose();
+    for (var controller in _mcControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   void _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    
+    final model = context.read<MainViewModel>();
+    
     setState(() {
       _urlController.text = prefs.getString('GoldUrl') ?? '';
       _goldElementController.text = prefs.getString('GoldElement') ?? '';
       _silverElementController.text = prefs.getString('SilverElement') ?? '';
       _companyNameController.text = prefs.getString('Company') ?? 'VERSAY JEWELLERY';
       _fontSizeController.text = prefs.getString('FontSize') ?? '20';
+      
+      for (var key in _mcKeys) {
+        double value = prefs.getDouble(key) ?? model.mcValues[key] ?? 0.0;
+        _mcControllers[key]!.text = value.toString();
+      }
     });
   }
 
@@ -41,6 +73,11 @@ class _SettingsPageState extends State<SettingsPage> {
     await prefs.setString('SilverElement', _silverElementController.text);
     await prefs.setString('Company', _companyNameController.text);
     await prefs.setString('FontSize', _fontSizeController.text);
+    
+    for (var key in _mcKeys) {
+      double val = double.tryParse(_mcControllers[key]!.text) ?? 0.0;
+      await prefs.setDouble(key, val);
+    }
     
     if (mounted) {
       context.read<MainViewModel>().loadSettings();
@@ -97,6 +134,27 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildTextField("Gold JS Element", _goldElementController, Icons.javascript_rounded),
                 const SizedBox(height: 16),
                 _buildTextField("Silver JS Element", _silverElementController, Icons.javascript_rounded),
+              ],
+            ),
+            const SizedBox(height: 24),
+            _buildSettingCard(
+              title: "MC Values",
+              icon: Icons.calculate_rounded,
+              children: [
+                for (int i = 0; i < _mcKeys.length; i += 2)
+                  Padding(
+                    padding: EdgeInsets.only(bottom: i + 2 >= _mcKeys.length ? 0 : 16),
+                    child: Row(
+                      children: [
+                        Expanded(child: _buildTextField(_mcKeys[i], _mcControllers[_mcKeys[i]]!, Icons.monetization_on_outlined, isNumber: true)),
+                        const SizedBox(width: 16),
+                        if (i + 1 < _mcKeys.length)
+                          Expanded(child: _buildTextField(_mcKeys[i + 1], _mcControllers[_mcKeys[i + 1]]!, Icons.monetization_on_outlined, isNumber: true))
+                        else
+                          Expanded(child: const SizedBox()),
+                      ],
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 40),

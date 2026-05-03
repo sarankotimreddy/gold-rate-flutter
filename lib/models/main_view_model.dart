@@ -10,6 +10,7 @@ class MainViewModel extends ChangeNotifier {
   String silverElement = "";
   String companyName = "VERSAY JEWELLERY";
   double fontSize = 20.0;
+  bool isSettingsLoaded = false;
   
   bool isVisible = true;
   double premium = 10.0;
@@ -70,8 +71,11 @@ class MainViewModel extends ChangeNotifier {
   void updateDollar(String val) {
     dollar = double.tryParse(val) ?? 0.0;
   }
-  void updateMC(String key, String val) {
-    mcValues[key] = double.tryParse(val) ?? 0.0;
+  void updateMC(String key, String val) async {
+    double value = double.tryParse(val) ?? 0.0;
+    mcValues[key] = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setDouble(key, value);
   }
 
   Future<void> loadSettings() async {
@@ -82,10 +86,15 @@ class MainViewModel extends ChangeNotifier {
     companyName = prefs.getString('Company') ?? 'VERSAY JEWELLERY';
     fontSize = double.tryParse(prefs.getString('FontSize') ?? '20') ?? 20.0;
     
+    for (String key in mcValues.keys.toList()) {
+      mcValues[key] = prefs.getDouble(key) ?? mcValues[key]!;
+    }
+    
     if (webViewController != null && goldUrl.isNotEmpty) {
       webViewController!.loadRequest(Uri.parse(goldUrl));
     }
     
+    isSettingsLoaded = true;
     notifyListeners();
     _startTimer();
   }

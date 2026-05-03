@@ -28,6 +28,15 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final vm = context.watch<MainViewModel>();
     
+    if (!vm.isSettingsLoaded) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF8F9FA),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF1E3C72)),
+        ),
+      );
+    }
+    
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
