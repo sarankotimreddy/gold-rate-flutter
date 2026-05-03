@@ -48,9 +48,9 @@ class MainViewModel extends ChangeNotifier {
 
   // MC values
   Map<String, double> mcValues = {
-    'McH': 12, 'McF': 11, 'McOz': 10, 'McTw': 8, 'McTe': 7,
-    'McFi': 6, 'McTf': 5, 'McO': 4, 'McMa': 14, 'McMu': 8,
-    'McNm': 6, 'McG': 1.5, 'McL': 1.5, 'McHl': 1.25, 'McRl': 1, 'McBl': 1
+    'Mc100g': 12, 'Mc50g': 11, 'Mc31.10g': 10, 'Mc20g': 8, 'Mc10g': 7,
+    'Mc5g': 6, 'Mc2.5g': 5, 'Mc1g': 4, 'Mc72g': 14, 'Mc36g': 8,
+    'Mc18g': 6, 'Mc8g': 1.5, 'Mc7.2g': 1.5, 'Mc3.6g': 1.25, 'Mc1.8g': 1, 'Mc0.9g': 1
   };
 
   WebViewController? webViewController;
@@ -71,11 +71,8 @@ class MainViewModel extends ChangeNotifier {
   void updateDollar(String val) {
     dollar = double.tryParse(val) ?? 0.0;
   }
-  void updateMC(String key, String val) async {
-    double value = double.tryParse(val) ?? 0.0;
-    mcValues[key] = value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setDouble(key, value);
+  void updateMC(String key, String val) {
+    mcValues[key] = double.tryParse(val) ?? 0.0;
   }
 
   Future<void> loadSettings() async {
@@ -85,6 +82,8 @@ class MainViewModel extends ChangeNotifier {
     silverElement = prefs.getString('SilverElement') ?? '';
     companyName = prefs.getString('Company') ?? 'VERSAY JEWELLERY';
     fontSize = double.tryParse(prefs.getString('FontSize') ?? '20') ?? 20.0;
+    premium = prefs.getDouble('Premium') ?? 10.0;
+    dollar = prefs.getDouble('Dollar') ?? 0.305;
     
     for (String key in mcValues.keys.toList()) {
       mcValues[key] = prefs.getDouble(key) ?? mcValues[key]!;
@@ -142,23 +141,23 @@ class MainViewModel extends ChangeNotifier {
       
       time = "${DateTime.now().toString().split('.')[0]}";
       
-      hPrice = ((fnPriceDouble * 100) + mcValues['McH']!).toStringAsFixed(3);
-      fPrice = ((fnPriceDouble * 50) + mcValues['McF']!).toStringAsFixed(3);
-      ozPrice = ((fnPriceDouble * 31.10) + mcValues['McOz']!).toStringAsFixed(3);
-      twPrice = ((fnPriceDouble * 20) + mcValues['McTw']!).toStringAsFixed(3);
-      tePrice = ((fnPriceDouble * 10) + mcValues['McTe']!).toStringAsFixed(3);
-      fiPrice = ((fnPriceDouble * 5) + mcValues['McFi']!).toStringAsFixed(3);
-      tfPrice = ((fnPriceDouble * 2.5) + mcValues['McTf']!).toStringAsFixed(3);
-      oPrice = ((fnPriceDouble * 1) + mcValues['McO']!).toStringAsFixed(3);
+      hPrice = ((fnPriceDouble * 100) + mcValues['Mc100g']!).toStringAsFixed(3);
+      fPrice = ((fnPriceDouble * 50) + mcValues['Mc50g']!).toStringAsFixed(3);
+      ozPrice = ((fnPriceDouble * 31.10) + mcValues['Mc31.10g']!).toStringAsFixed(3);
+      twPrice = ((fnPriceDouble * 20) + mcValues['Mc20g']!).toStringAsFixed(3);
+      tePrice = ((fnPriceDouble * 10) + mcValues['Mc10g']!).toStringAsFixed(3);
+      fiPrice = ((fnPriceDouble * 5) + mcValues['Mc5g']!).toStringAsFixed(3);
+      tfPrice = ((fnPriceDouble * 2.5) + mcValues['Mc2.5g']!).toStringAsFixed(3);
+      oPrice = ((fnPriceDouble * 1) + mcValues['Mc1g']!).toStringAsFixed(3);
       
-      maPrice = ((ttPriceDouble * 72) + mcValues['McMa']!).toStringAsFixed(3);
-      muPrice = ((ttPriceDouble * 36) + mcValues['McMu']!).toStringAsFixed(3);
-      nmPrice = ((ttPriceDouble * 18) + mcValues['McNm']!).toStringAsFixed(3);
-      gPrice = ((ttPriceDouble * 8) + mcValues['McG']!).toStringAsFixed(3);
-      lPrice = ((ttPriceDouble * 7.2) + mcValues['McL']!).toStringAsFixed(3);
-      hlPrice = ((ttPriceDouble * 3.6) + mcValues['McHl']!).toStringAsFixed(3);
-      rlPrice = ((ttPriceDouble * 1.80) + mcValues['McRl']!).toStringAsFixed(3);
-      blPrice = ((ttPriceDouble * 0.90) + mcValues['McBl']!).toStringAsFixed(3);
+      maPrice = ((ttPriceDouble * 72) + mcValues['Mc72g']!).toStringAsFixed(3);
+      muPrice = ((ttPriceDouble * 36) + mcValues['Mc36g']!).toStringAsFixed(3);
+      nmPrice = ((ttPriceDouble * 18) + mcValues['Mc18g']!).toStringAsFixed(3);
+      gPrice = ((ttPriceDouble * 8) + mcValues['Mc8g']!).toStringAsFixed(3);
+      lPrice = ((ttPriceDouble * 7.2) + mcValues['Mc7.2g']!).toStringAsFixed(3);
+      hlPrice = ((ttPriceDouble * 3.6) + mcValues['Mc3.6g']!).toStringAsFixed(3);
+      rlPrice = ((ttPriceDouble * 1.80) + mcValues['Mc1.8g']!).toStringAsFixed(3);
+      blPrice = ((ttPriceDouble * 0.90) + mcValues['Mc0.9g']!).toStringAsFixed(3);
       
       notifyListeners();
     }

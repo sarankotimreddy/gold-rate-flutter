@@ -16,12 +16,14 @@ class _SettingsPageState extends State<SettingsPage> {
   final _silverElementController = TextEditingController();
   final _companyNameController = TextEditingController();
   final _fontSizeController = TextEditingController();
+  final _premiumController = TextEditingController();
+  final _dollarController = TextEditingController();
 
   final Map<String, TextEditingController> _mcControllers = {};
   final List<String> _mcKeys = [
-    'McH', 'McF', 'McOz', 'McTw', 'McTe',
-    'McFi', 'McTf', 'McO', 'McMa', 'McMu',
-    'McNm', 'McG', 'McL', 'McHl', 'McRl', 'McBl'
+    'Mc100g', 'Mc50g', 'Mc31.10g', 'Mc20g', 'Mc10g',
+    'Mc5g', 'Mc2.5g', 'Mc1g', 'Mc72g', 'Mc36g',
+    'Mc18g', 'Mc8g', 'Mc7.2g', 'Mc3.6g', 'Mc1.8g', 'Mc0.9g'
   ];
 
   @override
@@ -40,6 +42,8 @@ class _SettingsPageState extends State<SettingsPage> {
     _silverElementController.dispose();
     _companyNameController.dispose();
     _fontSizeController.dispose();
+    _premiumController.dispose();
+    _dollarController.dispose();
     for (var controller in _mcControllers.values) {
       controller.dispose();
     }
@@ -58,6 +62,8 @@ class _SettingsPageState extends State<SettingsPage> {
       _silverElementController.text = prefs.getString('SilverElement') ?? '';
       _companyNameController.text = prefs.getString('Company') ?? 'VERSAY JEWELLERY';
       _fontSizeController.text = prefs.getString('FontSize') ?? '20';
+      _premiumController.text = (prefs.getDouble('Premium') ?? 10.0).toString();
+      _dollarController.text = (prefs.getDouble('Dollar') ?? 0.305).toString();
       
       for (var key in _mcKeys) {
         double value = prefs.getDouble(key) ?? model.mcValues[key] ?? 0.0;
@@ -73,6 +79,8 @@ class _SettingsPageState extends State<SettingsPage> {
     await prefs.setString('SilverElement', _silverElementController.text);
     await prefs.setString('Company', _companyNameController.text);
     await prefs.setString('FontSize', _fontSizeController.text);
+    await prefs.setDouble('Premium', double.tryParse(_premiumController.text) ?? 10.0);
+    await prefs.setDouble('Dollar', double.tryParse(_dollarController.text) ?? 0.305);
     
     for (var key in _mcKeys) {
       double val = double.tryParse(_mcControllers[key]!.text) ?? 0.0;
@@ -122,6 +130,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildTextField("Company Name", _companyNameController, Icons.business),
                 const SizedBox(height: 16),
                 _buildTextField("Font Size", _fontSizeController, Icons.format_size, isNumber: true),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(child: _buildTextField("Premium", _premiumController, Icons.add_circle_outline, isNumber: true)),
+                    const SizedBox(width: 16),
+                    Expanded(child: _buildTextField("Dollar", _dollarController, Icons.attach_money, isNumber: true)),
+                  ],
+                ),
               ],
             ),
             const SizedBox(height: 24),
