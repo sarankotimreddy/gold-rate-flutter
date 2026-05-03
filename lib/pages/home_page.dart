@@ -19,9 +19,9 @@ class _HomePageState extends State<HomePage> {
     final vm = context.read<MainViewModel>();
     vm.webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted);
-    if (vm.goldUrl.isNotEmpty) {
-      vm.webViewController!.loadRequest(Uri.parse(vm.goldUrl));
-    }
+    // Re-trigger loadSettings now that the webViewController is ready
+    // This ensures the URL gets loaded after the controller is set
+    vm.loadSettings();
   }
 
   @override
@@ -55,13 +55,16 @@ class _HomePageState extends State<HomePage> {
       ),
       body: Stack(
         children: [
-          // Hidden webview
-          SizedBox(
-            height: 1,
-            width: 1,
-            child: vm.webViewController != null 
-                ? WebViewWidget(controller: vm.webViewController!) 
-                : const SizedBox.shrink(),
+          // Hidden webview - Offstage keeps it rendered but invisible
+          Offstage(
+            offstage: true,
+            child: SizedBox(
+              height: 100,
+              width: 100,
+              child: vm.webViewController != null 
+                  ? WebViewWidget(controller: vm.webViewController!) 
+                  : const SizedBox.shrink(),
+            ),
           ),
           Column(
             children: [
@@ -129,7 +132,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             const Icon(Icons.access_time_filled, color: Color(0xFFD4AF37), size: 20),
             const SizedBox(width: 8),
-            Text(vm.time, style: TextStyle(fontSize: vm.fontSize * 0.7, fontWeight: FontWeight.w600, color: Colors.black87)),
+            Text(vm.time, style: TextStyle(fontSize: vm.fontSize, fontWeight: FontWeight.w600, color: Colors.black87)),
           ],
         ),
       ),

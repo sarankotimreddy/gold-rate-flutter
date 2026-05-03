@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/main_view_model.dart';
+import '../main.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -88,14 +89,19 @@ class _SettingsPageState extends State<SettingsPage> {
     }
     
     if (mounted) {
-      context.read<MainViewModel>().loadSettings();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Settings saved successfully!'),
-          backgroundColor: Color(0xFF1E3C72),
-          duration: Duration(seconds: 2),
-        ),
-      );
+      await context.read<MainViewModel>().loadSettings();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Settings saved successfully!'),
+            backgroundColor: Color(0xFF1E3C72),
+            duration: Duration(seconds: 2),
+          ),
+        );
+        // Switch to the Home tab to show reloaded data
+        final mainScreenState = context.findAncestorStateOfType<MainScreenState>();
+        mainScreenState?.switchToTab(0);
+      }
     }
   }
 

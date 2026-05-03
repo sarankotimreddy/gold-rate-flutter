@@ -139,7 +139,12 @@ class MainViewModel extends ChangeNotifier {
       toPrice = (tnine * 0.875875).toStringAsFixed(3);
       ePrice = (tnine * 0.750750).toStringAsFixed(3);
       
-      time = "${DateTime.now().toString().split('.')[0]}";
+      final now = DateTime.now();
+      final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;
+      final period = now.hour >= 12 ? 'PM' : 'AM';
+      final minute = now.minute.toString().padLeft(2, '0');
+      final second = now.second.toString().padLeft(2, '0');
+      time = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} $hour:$minute:$second $period";
       
       hPrice = ((fnPriceDouble * 100) + mcValues['Mc100g']!).toStringAsFixed(3);
       fPrice = ((fnPriceDouble * 50) + mcValues['Mc50g']!).toStringAsFixed(3);
