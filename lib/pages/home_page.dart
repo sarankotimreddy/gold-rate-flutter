@@ -19,8 +19,10 @@ class _HomePageState extends State<HomePage> {
     final vm = context.read<MainViewModel>();
     vm.webViewController = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted);
-    // Re-trigger loadSettings now that the webViewController is ready
-    // This ensures the URL gets loaded after the controller is set
+    vm.silverWebViewController = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted);
+    // Re-trigger loadSettings now that the webViewControllers are ready
+    // This ensures the URL gets loaded after the controllers are set
     vm.loadSettings();
   }
 
@@ -63,6 +65,16 @@ class _HomePageState extends State<HomePage> {
               width: 100,
               child: vm.webViewController != null 
                   ? WebViewWidget(controller: vm.webViewController!) 
+                  : const SizedBox.shrink(),
+            ),
+          ),
+          Offstage(
+            offstage: true,
+            child: SizedBox(
+              height: 100,
+              width: 100,
+              child: vm.silverWebViewController != null 
+                  ? WebViewWidget(controller: vm.silverWebViewController!) 
                   : const SizedBox.shrink(),
             ),
           ),
@@ -169,7 +181,7 @@ class _HomePageState extends State<HomePage> {
               _buildModernRow("22K :", vm.ttPrice, vm.fontSize, true),
               _buildModernRow("21K :", vm.toPrice, vm.fontSize, false),
               _buildModernRow("18K :", vm.ePrice, vm.fontSize, true),
-              _buildModernRow("Silver Onz \$ :", vm.silverOnz, vm.fontSize, false),
+              _buildModernRow("Silver Price (1Kg) KD :", vm.kiloSilverPrice, vm.fontSize, false),
             ],
           ),
         ),
@@ -216,11 +228,15 @@ class _HomePageState extends State<HomePage> {
             Row(
               children: [
                 Expanded(
-                  child: _buildInputField("Premium", vm.premium.toString(), vm.updatePremium),
+                  child: _buildInputField("Premium", vm.premium.toString(), vm.fontSize, vm.updatePremium),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
-                  child: _buildInputField("Dollar", vm.dollar.toString(), vm.updateDollar),
+                  child: _buildInputField("S-Premium", vm.silverPremium.toString(), vm.fontSize, vm.updateSilverPremium),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildInputField("Dollar", vm.dollar.toString(), vm.fontSize, vm.updateDollar),
                 ),
               ],
             ),
@@ -230,20 +246,20 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildInputField(String label, String initialValue, Function(String) onChanged) {
+  Widget _buildInputField(String label, String initialValue, double fontSize, Function(String) onChanged) {
     return TextFormField(
       initialValue: initialValue,
       onChanged: onChanged,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: const TextStyle(color: Colors.grey),
+        labelStyle: TextStyle(color: Colors.grey, fontSize: fontSize * 0.6),
         filled: true,
         fillColor: Colors.grey.shade100,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
-      style: const TextStyle(fontWeight: FontWeight.w600),
+      style: TextStyle(fontWeight: FontWeight.w600, fontSize: fontSize * 0.8),
     );
   }
 

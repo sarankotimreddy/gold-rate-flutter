@@ -18,7 +18,9 @@ class _SettingsPageState extends State<SettingsPage> {
   final _companyNameController = TextEditingController();
   final _fontSizeController = TextEditingController();
   final _premiumController = TextEditingController();
+  final _silverPremiumController = TextEditingController();
   final _dollarController = TextEditingController();
+  final _silverUrlController = TextEditingController();
 
   final Map<String, TextEditingController> _mcControllers = {};
   final List<String> _mcKeys = [
@@ -44,7 +46,9 @@ class _SettingsPageState extends State<SettingsPage> {
     _companyNameController.dispose();
     _fontSizeController.dispose();
     _premiumController.dispose();
+    _silverPremiumController.dispose();
     _dollarController.dispose();
+    _silverUrlController.dispose();
     for (var controller in _mcControllers.values) {
       controller.dispose();
     }
@@ -64,7 +68,9 @@ class _SettingsPageState extends State<SettingsPage> {
       _companyNameController.text = prefs.getString('Company') ?? 'VERSAY JEWELLERY';
       _fontSizeController.text = prefs.getString('FontSize') ?? '20';
       _premiumController.text = (prefs.getDouble('Premium') ?? 10.0).toString();
+      _silverPremiumController.text = (prefs.getDouble('SilverPremium') ?? 1.0).toString();
       _dollarController.text = (prefs.getDouble('Dollar') ?? 0.305).toString();
+      _silverUrlController.text = prefs.getString('SilverUrl') ?? '';
       
       for (var key in _mcKeys) {
         double value = prefs.getDouble(key) ?? model.mcValues[key] ?? 0.0;
@@ -81,7 +87,9 @@ class _SettingsPageState extends State<SettingsPage> {
     await prefs.setString('Company', _companyNameController.text);
     await prefs.setString('FontSize', _fontSizeController.text);
     await prefs.setDouble('Premium', double.tryParse(_premiumController.text) ?? 10.0);
+    await prefs.setDouble('SilverPremium', double.tryParse(_silverPremiumController.text) ?? 1.0);
     await prefs.setDouble('Dollar', double.tryParse(_dollarController.text) ?? 0.305);
+    await prefs.setString('SilverUrl', _silverUrlController.text);
     
     for (var key in _mcKeys) {
       double val = double.tryParse(_mcControllers[key]!.text) ?? 0.0;
@@ -141,9 +149,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [
                     Expanded(child: _buildTextField("Premium", _premiumController, Icons.add_circle_outline, isNumber: true)),
                     const SizedBox(width: 16),
-                    Expanded(child: _buildTextField("Dollar", _dollarController, Icons.attach_money, isNumber: true)),
+                    Expanded(child: _buildTextField("Silver Premium", _silverPremiumController, Icons.add_circle_outline, isNumber: true)),
                   ],
                 ),
+                const SizedBox(height: 16),
+                _buildTextField("Dollar", _dollarController, Icons.attach_money, isNumber: true),
               ],
             ),
             const SizedBox(height: 24),
@@ -152,6 +162,8 @@ class _SettingsPageState extends State<SettingsPage> {
               icon: Icons.data_object_rounded,
               children: [
                 _buildTextField("Target URL", _urlController, Icons.link, isUrl: true),
+                const SizedBox(height: 16),
+                _buildTextField("Silver URL", _silverUrlController, Icons.link, isUrl: true),
                 const SizedBox(height: 16),
                 _buildTextField("Gold JS Element", _goldElementController, Icons.javascript_rounded),
                 const SizedBox(height: 16),

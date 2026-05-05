@@ -6,20 +6,22 @@ import 'package:webview_all/webview_all.dart';
 
 class MainViewModel extends ChangeNotifier {
   String goldUrl = "";
+  String silverUrl = "";
   String goldElement = "";
   String silverElement = "";
   String companyName = "VERSAY JEWELLERY";
   double fontSize = 20.0;
   bool isSettingsLoaded = false;
-  
+
   bool isVisible = true;
   double premium = 10.0;
+  double silverPremium = 1.0;
   double dollar = 0.305;
-  
+
   String time = "";
   String onzPrice = "0.0";
   String silverOnz = "0.0";
-  
+
   // Calculated prices
   String tnPrice = "0.0";
   String fnPrice = "0.0";
@@ -27,7 +29,8 @@ class MainViewModel extends ChangeNotifier {
   String ttPrice = "0.0";
   String toPrice = "0.0";
   String ePrice = "0.0";
-  
+  String kiloSilverPrice = "0.0";
+
   // Weight prices
   String hPrice = "0.0";
   String fPrice = "0.0";
@@ -48,12 +51,26 @@ class MainViewModel extends ChangeNotifier {
 
   // MC values
   Map<String, double> mcValues = {
-    'Mc100g': 12, 'Mc50g': 11, 'Mc31.10g': 10, 'Mc20g': 8, 'Mc10g': 7,
-    'Mc5g': 6, 'Mc2.5g': 5, 'Mc1g': 4, 'Mc72g': 14, 'Mc36g': 8,
-    'Mc18g': 6, 'Mc8g': 1.5, 'Mc7.2g': 1.5, 'Mc3.6g': 1.25, 'Mc1.8g': 1, 'Mc0.9g': 1
+    'Mc100g': 12,
+    'Mc50g': 11,
+    'Mc31.10g': 10,
+    'Mc20g': 8,
+    'Mc10g': 7,
+    'Mc5g': 6,
+    'Mc2.5g': 5,
+    'Mc1g': 4,
+    'Mc72g': 14,
+    'Mc36g': 8,
+    'Mc18g': 6,
+    'Mc8g': 1.5,
+    'Mc7.2g': 1.5,
+    'Mc3.6g': 1.25,
+    'Mc1.8g': 1,
+    'Mc0.9g': 1,
   };
 
   WebViewController? webViewController;
+  WebViewController? silverWebViewController;
   Timer? _timer;
 
   MainViewModel() {
@@ -64,13 +81,19 @@ class MainViewModel extends ChangeNotifier {
     isVisible = !isVisible;
     notifyListeners();
   }
-  
+
   void updatePremium(String val) {
     premium = double.tryParse(val) ?? 0.0;
   }
+
+  void updateSilverPremium(String val) {
+    silverPremium = double.tryParse(val) ?? 0.0;
+  }
+
   void updateDollar(String val) {
     dollar = double.tryParse(val) ?? 0.0;
   }
+
   void updateMC(String key, String val) {
     mcValues[key] = double.tryParse(val) ?? 0.0;
   }
@@ -78,21 +101,27 @@ class MainViewModel extends ChangeNotifier {
   Future<void> loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     goldUrl = prefs.getString('GoldUrl') ?? '';
+    silverUrl = prefs.getString('SilverUrl') ?? '';
     goldElement = prefs.getString('GoldElement') ?? '';
     silverElement = prefs.getString('SilverElement') ?? '';
     companyName = prefs.getString('Company') ?? 'VERSAY JEWELLERY';
     fontSize = double.tryParse(prefs.getString('FontSize') ?? '20') ?? 20.0;
     premium = prefs.getDouble('Premium') ?? 10.0;
+    silverPremium = prefs.getDouble('SilverPremium') ?? 1.0;
     dollar = prefs.getDouble('Dollar') ?? 0.305;
-    
+
     for (String key in mcValues.keys.toList()) {
       mcValues[key] = prefs.getDouble(key) ?? mcValues[key]!;
     }
-    
+
     if (webViewController != null && goldUrl.isNotEmpty) {
       webViewController!.loadRequest(Uri.parse(goldUrl));
     }
-    
+
+    if (silverWebViewController != null && silverUrl.isNotEmpty) {
+      silverWebViewController!.loadRequest(Uri.parse(silverUrl));
+    }
+
     isSettingsLoaded = true;
     notifyListeners();
     _startTimer();
@@ -106,64 +135,95 @@ class MainViewModel extends ChangeNotifier {
   }
 
   Future<void> _fetchDataFromWebView() async {
-    if (webViewController != null && goldElement.isNotEmpty) {
-      try {
-        final onz = await webViewController!.runJavaScriptReturningResult(goldElement);
-        final silver = silverElement.isNotEmpty ? await webViewController!.runJavaScriptReturningResult(silverElement) : "0.0";
-        
-        onzPrice = onz.toString().replaceAll('"', '').trim();
-        silverOnz = silver.toString().replaceAll('"', '').trim();
-        
-        _calculatePrices();
-      } catch (e) {
-        debugPrint(e.toString());
+    if (webViewController == null) return;
+
+    try {
+      // 1. Fetch Gold Data
+      if (goldElement.isNotEmpty) {
+        final onz = await webViewController!.runJavaScriptReturningResult(
+          goldElement,
+        );
+        onzPrice = onz.toString().replaceAll('"', '').replaceAll(',', '').trim();
       }
+
+      // 2. Fetch Silver Data
+      if (silverElement.isNotEmpty) {
+        // If silverUrl is provided, use silverWebViewController, otherwise use webViewController
+        final sController = (silverUrl.trim().isNotEmpty && silverWebViewController != null)
+            ? silverWebViewController!
+            : webViewController!;
+
+        final silver = await sController.runJavaScriptReturningResult(
+          silverElement,
+        );
+        silverOnz = silver.toString().replaceAll('"', '').replaceAll(',', '').trim();
+      }
+
+      _calculatePrices();
+    } catch (e) {
+      debugPrint("Error fetching data: ${e.toString()}");
     }
   }
 
   void _calculatePrices() {
     double result = double.tryParse(onzPrice) ?? 0;
+    double silverResult = double.tryParse(silverOnz) ?? 0;
     
+    if (silverResult > 0) {
+      double silverPriceKd = (((silverResult / 100) + silverPremium) * 32.119) * dollar;
+      kiloSilverPrice = silverPriceKd.toStringAsFixed(3);
+    }
+
     if (result > 0) {
       double tnine = (((result + premium) * 32.119) * dollar) / 1000;
       tnPrice = tnine.toStringAsFixed(3);
-      
+
       double fnPriceDouble = ((tnine * 0.9999) / 0.999);
       fnPrice = fnPriceDouble.toStringAsFixed(3);
-      
+
       nfPrice = ((tnine * 0.995) / 0.999).toStringAsFixed(3);
-      
+
       double ttPriceDouble = (tnine * 0.917917);
       ttPrice = ttPriceDouble.toStringAsFixed(3);
-      
+
       toPrice = (tnine * 0.875875).toStringAsFixed(3);
       ePrice = (tnine * 0.750750).toStringAsFixed(3);
-      
+
       final now = DateTime.now();
       final hour = now.hour % 12 == 0 ? 12 : now.hour % 12;
       final period = now.hour >= 12 ? 'PM' : 'AM';
       final minute = now.minute.toString().padLeft(2, '0');
       final second = now.second.toString().padLeft(2, '0');
-      time = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} $hour:$minute:$second $period";
-      
+      time =
+          "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')} $hour:$minute:$second $period";
+
       hPrice = ((fnPriceDouble * 100) + mcValues['Mc100g']!).toStringAsFixed(3);
       fPrice = ((fnPriceDouble * 50) + mcValues['Mc50g']!).toStringAsFixed(3);
-      ozPrice = ((fnPriceDouble * 31.10) + mcValues['Mc31.10g']!).toStringAsFixed(3);
+      ozPrice = ((fnPriceDouble * 31.10) + mcValues['Mc31.10g']!)
+          .toStringAsFixed(3);
       twPrice = ((fnPriceDouble * 20) + mcValues['Mc20g']!).toStringAsFixed(3);
       tePrice = ((fnPriceDouble * 10) + mcValues['Mc10g']!).toStringAsFixed(3);
       fiPrice = ((fnPriceDouble * 5) + mcValues['Mc5g']!).toStringAsFixed(3);
-      tfPrice = ((fnPriceDouble * 2.5) + mcValues['Mc2.5g']!).toStringAsFixed(3);
+      tfPrice = ((fnPriceDouble * 2.5) + mcValues['Mc2.5g']!).toStringAsFixed(
+        3,
+      );
       oPrice = ((fnPriceDouble * 1) + mcValues['Mc1g']!).toStringAsFixed(3);
-      
+
       maPrice = ((ttPriceDouble * 72) + mcValues['Mc72g']!).toStringAsFixed(3);
       muPrice = ((ttPriceDouble * 36) + mcValues['Mc36g']!).toStringAsFixed(3);
       nmPrice = ((ttPriceDouble * 18) + mcValues['Mc18g']!).toStringAsFixed(3);
       gPrice = ((ttPriceDouble * 8) + mcValues['Mc8g']!).toStringAsFixed(3);
       lPrice = ((ttPriceDouble * 7.2) + mcValues['Mc7.2g']!).toStringAsFixed(3);
-      hlPrice = ((ttPriceDouble * 3.6) + mcValues['Mc3.6g']!).toStringAsFixed(3);
-      rlPrice = ((ttPriceDouble * 1.80) + mcValues['Mc1.8g']!).toStringAsFixed(3);
-      blPrice = ((ttPriceDouble * 0.90) + mcValues['Mc0.9g']!).toStringAsFixed(3);
-      
+      hlPrice = ((ttPriceDouble * 3.6) + mcValues['Mc3.6g']!).toStringAsFixed(
+        3,
+      );
+      rlPrice = ((ttPriceDouble * 1.80) + mcValues['Mc1.8g']!).toStringAsFixed(
+        3,
+      );
+      blPrice = ((ttPriceDouble * 0.90) + mcValues['Mc0.9g']!).toStringAsFixed(
+        3,
+      );
+
       notifyListeners();
     }
   }
